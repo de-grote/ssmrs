@@ -35,6 +35,9 @@ pub enum Instr {
     LE,
     GT,
     GE,
+    AND,
+    OR,
+    XOR,
     NEG,
     NOT,
     RET,
@@ -190,6 +193,15 @@ impl Instr {
             Instr::HALT => {
                 vec![0x28]
             }
+            Instr::AND => {
+                vec![0x29]
+            }
+            Instr::OR => {
+                vec![0x2A]
+            }
+            Instr::XOR => {
+                vec![0x2B]
+            }
             Instr::LABEL(_) => {
                 panic!("LABEL should never be executed!")
             }
@@ -252,6 +264,9 @@ impl From<&[i32]> for Instr {
             0x26 => Instr::TRAP(v[1]),
             0x27 => Instr::NOP,
             0x28 => Instr::HALT,
+            0x29 => Instr::AND,
+            0x2A => Instr::OR,
+            0x2B => Instr::XOR,
             _ => panic!("Invalid instruction!"),
         }
     }
@@ -305,6 +320,9 @@ impl Display for Instr {
             Instr::TRAP(n) => write!(f, "\tTRAP {}", n),
             Instr::NOP => write!(f, "\tNOP"),
             Instr::HALT => write!(f, "\tHALT"),
+            Instr::AND => write!(f, "\tAND"),
+            Instr::OR => write!(f, "\tOR"),
+            Instr::XOR => write!(f, "\tXOR"),
             Instr::LABEL(n) => write!(f, "{}:", n),
         }
     }

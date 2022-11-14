@@ -65,6 +65,9 @@ fn parse_instr() -> impl Parser<char, Instr, Error = Simple<char>> {
         s("JSR", Instr::JSR),
         s("NOP", Instr::NOP),
         s("HALT", Instr::HALT),
+        s("AND", Instr::AND),
+        s("OR", Instr::OR),
+        s("XOR", Instr::XOR),
     )))
     .or(choice((
         w("SWPRR", Instr::SWPRR, parse_register(), parse_register()),

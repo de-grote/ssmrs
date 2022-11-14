@@ -1,0 +1,17 @@
+    LDC 1
+    LDC 0
+    AND
+    TRAP 0
+    LDC 1
+    LDC 1
+    AND
+    TRAP 0
+    LDC 1
+    LDC 0
+    OR
+    TRAP 0
+    LDC 1
+    LDC 1
+    XOR
+    TRAP 0
+    HALT

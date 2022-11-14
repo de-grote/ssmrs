@@ -3,7 +3,11 @@ use std::{
     collections::HashMap,
 };
 
-use crate::{instruction::Instr, register::{Reg, RegisterFile}, Code};
+use crate::{
+    instruction::Instr,
+    register::{Reg, RegisterFile},
+    Code,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Cpu {
@@ -298,6 +302,21 @@ impl Cpu {
             },
             Instr::NOP => {}
             Instr::HALT => return false,
+            Instr::AND => {
+                let a = self.pop_stack();
+                let b = self.pop_stack();
+                self.push_stack((a != 0 && b != 0) as i32);
+            }
+            Instr::OR => {
+                let a = self.pop_stack();
+                let b = self.pop_stack();
+                self.push_stack((a != 0 || b != 0) as i32);
+            }
+            Instr::XOR => {
+                let a = self.pop_stack();
+                let b = self.pop_stack();
+                self.push_stack(((a != 0) ^ (b != 0)) as i32);
+            }
             _ => panic!("Invalid instruction!"),
         }
         true
