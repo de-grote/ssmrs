@@ -1,0 +1,21 @@
+	LINK 1
+	LDRR R7 MP
+	Bsr main
+	UNLINK
+	HALT
+main:
+	LINK 1
+	LDC 3
+	LDC 5
+	MUL
+	LDC 2
+	ADD
+	TRAP 0
+	LDC 3
+	LDC 2
+	ADD
+	LDC 1
+	EQ
+	TRAP 0
+	UNLINK
+	RET

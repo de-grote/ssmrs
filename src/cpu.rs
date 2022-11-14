@@ -89,13 +89,14 @@ impl Cpu {
     }
 
     fn push_stack(&mut self, value: i32) {
-        self.set_mem_reg(Reg::SP, value);
         self.adjust_reg(Reg::SP, 1);
+        self.set_mem_reg(Reg::SP, value);
     }
 
     fn pop_stack(&mut self) -> i32 {
+        let s = self.get_mem_reg(Reg::SP);
         self.adjust_reg(Reg::SP, -1);
-        self.get_mem_reg(Reg::SP)
+        s
     }
 
     fn exec(&mut self, i: Instr) -> bool {

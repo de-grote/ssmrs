@@ -1,8 +1,8 @@
 use chumsky::{
     prelude::Simple,
     primitive::{choice, just},
-    text::{self, whitespace, TextParser},
-    Parser,
+    text::{self, ident, whitespace, TextParser},
+    Error, Parser,
 };
 
 use crate::register::Reg;
@@ -85,7 +85,15 @@ fn i<A>(
     f: impl Fn(A) -> Instr,
     p: impl Parser<char, A, Error = Simple<char>>,
 ) -> impl Parser<char, Instr, Error = Simple<char>> {
-    just(s).ignore_then(whitespace()).ignore_then(p).map(f)
+    ident()
+        .try_map(move |st: String, span| {
+            st.eq_ignore_ascii_case(s)
+                .then_some(())
+                .ok_or_else(|| Simple::expected_input_found(span, None, None))
+        })
+        .ignore_then(whitespace())
+        .ignore_then(p)
+        .map(f)
 }
 
 fn s(s: &'static str, i: Instr) -> impl Parser<char, Instr, Error = Simple<char>> {
