@@ -1,0 +1,12 @@
+    LDC 42
+    BRA foo
+baz:
+    LDC 1
+    LDC 2
+    ADD
+    BRA bar
+foo:
+    BRA baz
+bar:
+    TRAP 0
+    HALT
