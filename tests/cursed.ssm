@@ -1,0 +1,8 @@
+    LDC 5
+    LDRR MP PC
+    LDC 5
+    STL 5
+    LDC 0
+    ADD
+    TRAP 0
+    HALT
