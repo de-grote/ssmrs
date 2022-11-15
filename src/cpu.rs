@@ -178,28 +178,28 @@ impl Cpu {
                 self.set_reg(Reg::PC, addr);
             }
             Instr::ADD => {
-                let a = self.pop_stack();
                 let b = self.pop_stack();
+                let a = self.pop_stack();
                 self.push_stack(a + b);
             }
             Instr::SUB => {
-                let a = self.pop_stack();
                 let b = self.pop_stack();
+                let a = self.pop_stack();
                 self.push_stack(a - b);
             }
             Instr::MUL => {
-                let a = self.pop_stack();
                 let b = self.pop_stack();
+                let a = self.pop_stack();
                 self.push_stack(a * b);
             }
             Instr::DIV => {
-                let a = self.pop_stack();
                 let b = self.pop_stack();
+                let a = self.pop_stack();
                 self.push_stack(a / b);
             }
             Instr::MOD => {
-                let a = self.pop_stack();
                 let b = self.pop_stack();
+                let a = self.pop_stack();
                 self.push_stack(a % b);
             }
             Instr::EQ => {

@@ -1,0 +1,13 @@
+    LDC 10
+    LDC 5
+    SUB
+    TRAP 0
+    LDC 13
+    LDC 5
+    MOD
+    TRAP 0
+    LDC 13
+    LDC 5
+    DIV
+    TRAP 0
+    HALT
