@@ -1,10 +1,9 @@
-[package]
-name = "ssmrs"
-version = "0.1.0"
-edition = "2021"
+[workspace]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+members = [
+    "ssmrs",
+]
 
-[dependencies]
-chumsky = "0.8.0"
-clap = { version = "4.0.24", features = ["derive"] }
+default-members = [
+    "ssmrs",
+]
