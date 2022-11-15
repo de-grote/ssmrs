@@ -124,6 +124,9 @@ fn parse_register() -> impl Parser<char, Reg, Error = Simple<char>> {
         just("R5").to(Reg::R5),
         just("R6").to(Reg::R6),
         just("R7").to(Reg::R7),
+        just("R0").to(Reg::PC),
+        just("R1").to(Reg::SP),
+        just("R2").to(Reg::MP),
     ))
 }
 
