@@ -18,7 +18,6 @@ fn main() {
     let res = Cli::parse();
     let code = read_to_string(res.file).unwrap();
     let c = ssmrs::parse().parse(code).unwrap();
-    println!("{:?}", c);
     let mut cpu = Cpu::new(res.verbosity);
     cpu.load_code(c);
     while cpu.step() {}

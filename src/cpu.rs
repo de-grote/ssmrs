@@ -74,15 +74,15 @@ impl Cpu {
     pub fn step(&mut self) -> bool {
         let current_pc = self.get_reg(Reg::PC);
         let instr = Instr::from(&self.memory[current_pc as usize..current_pc as usize + 3]);
-        if self.verbosity > 0 {
-            println!("Executing {:?}", instr);
-        }
         if self.verbosity > 1 {
             println!("Registers: {:?}", self.registers);
             println!(
                 "Memory: {:?}",
-                &self.memory[0..(self.get_reg(Reg::SP) as usize)]
+                &self.memory[0..(self.get_reg(Reg::SP) as usize + 1)]
             );
+        }
+        if self.verbosity > 0 {
+            println!("Executing {:?}", instr);
         }
         self.set_reg(Reg::PC, current_pc + instr.instr_size() as i32);
         self.exec(instr)
@@ -213,23 +213,23 @@ impl Cpu {
                 self.push_stack((a != b) as i32);
             }
             Instr::LT => {
-                let a = self.pop_stack();
                 let b = self.pop_stack();
+                let a = self.pop_stack();
                 self.push_stack((a < b) as i32);
             }
             Instr::LE => {
-                let a = self.pop_stack();
                 let b = self.pop_stack();
+                let a = self.pop_stack();
                 self.push_stack((a <= b) as i32);
             }
             Instr::GT => {
-                let a = self.pop_stack();
                 let b = self.pop_stack();
+                let a = self.pop_stack();
                 self.push_stack((a > b) as i32);
             }
             Instr::GE => {
-                let a = self.pop_stack();
                 let b = self.pop_stack();
+                let a = self.pop_stack();
                 self.push_stack((a >= b) as i32);
             }
             Instr::NEG => {
