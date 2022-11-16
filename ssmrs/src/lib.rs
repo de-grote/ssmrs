@@ -5,6 +5,7 @@ pub mod register;
 
 pub type Code = Vec<Instr>;
 
+pub use chumsky::Parser;
 pub use cpu::Cpu;
 pub use instruction::Instr;
 pub use parser::parse;
