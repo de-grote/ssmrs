@@ -319,17 +319,17 @@ impl Cpu {
             Instr::AND => {
                 let a = self.pop_stack();
                 let b = self.pop_stack();
-                self.push_stack((a != 0 && b != 0).get_ssm_value());
+                self.push_stack(a & b);
             }
             Instr::OR => {
                 let a = self.pop_stack();
                 let b = self.pop_stack();
-                self.push_stack((a != 0 || b != 0).get_ssm_value());
+                self.push_stack(a | b);
             }
             Instr::XOR => {
                 let a = self.pop_stack();
                 let b = self.pop_stack();
-                self.push_stack(((a != 0) ^ (b != 0)).get_ssm_value());
+                self.push_stack(a ^ b);
             }
             _ => panic!("Invalid instruction!"),
         }
