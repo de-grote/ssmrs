@@ -4,18 +4,13 @@ on:
   push:
     branches:
       - main
-
-
-permissions:
-  pages: write
-  id-token: write
-
+      - feat/pages*
 
 jobs:
-  build-github-pages:
+  build-pages:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2 
+      - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1 
         with:
           profile: minimal
@@ -23,7 +18,7 @@ jobs:
           target: wasm32-unknown-unknown
           override: true
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
       - name: Download and install Trunk binary
         run: wget -qO- https://github.com/thedodd/trunk/releases/latest/download/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
         working-directory: ./ssmrs-gui
@@ -34,7 +29,24 @@ jobs:
         uses: actions/upload-pages-artifact@v1.0.4
         with:
           path: ./ssmrs-gui/dist
-      - name: Deploy
-        uses: actions/deploy-pages@v1.2.2
+  deploy:
+    # Add a dependency to the build job
+    needs: build-pages
 
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
           
