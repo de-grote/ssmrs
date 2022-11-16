@@ -1658,7 +1658,7 @@ dependencies = [
 
 [[package]]
 name = "ssmrs"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "chumsky",
  "clap",
@@ -1666,7 +1666,7 @@ dependencies = [
 
 [[package]]
 name = "ssmrs-gui"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "console_error_panic_hook",
  "eframe",

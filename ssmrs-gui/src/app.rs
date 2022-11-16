@@ -15,7 +15,8 @@ pub struct SSMRS {
 use std::future::Future;
 
 use egui::mutex::{Mutex, RwLock};
-use egui::RichText;
+use egui::output::OpenUrl;
+use egui::{RichText, Ui};
 use ssmrs::register::Reg;
 use ssmrs::{Code, Cpu, Instr, Parser};
 #[cfg(not(target_arch = "wasm32"))]
@@ -58,6 +59,13 @@ fn open_file(z: Arc<Mutex<Option<String>>>) {
             }
         }
     })
+}
+
+fn open_url(ui: &Ui, url: &str, new_tab: bool) {
+    ui.ctx().output().open_url = Some(OpenUrl {
+        url: url.to_string(),
+        new_tab,
+    });
 }
 
 impl eframe::App for SSMRS {
@@ -118,6 +126,18 @@ impl eframe::App for SSMRS {
                         _frame.close();
                     }
                 });
+                ui.menu_button("Help", |ui| {
+                    if ui.button("Source").clicked() {
+                        open_url(ui, "https://github.com/J00LZ/ssmrs", true);
+                    }
+                    if ui.button("Documentation").clicked() {
+                        open_url(
+                            ui,
+                            "https://webspace.science.uu.nl/~hage0101/SSM/index.html",
+                            true,
+                        );
+                    }
+                });
                 egui::warn_if_debug_build(ui);
             });
         });
@@ -150,16 +170,7 @@ impl eframe::App for SSMRS {
             // The bottom panel is often a good place for a status bar:
             ui.horizontal(|ui| {
                 ui.label("SSMRS by Julius de Jeu");
-                ui.label("Based on ");
-                ui.hyperlink_to(
-                    "Simple Stack Machine",
-                    "https://github.com/atzedijkstra/ssm",
-                );
-                ui.label(" by Atze Dijkstra");
-                ui.hyperlink_to(
-                    "Docs",
-                    "https://webspace.science.uu.nl/~hage0101/SSM/index.html",
-                );
+                ui.label("Based on Simple Stack Machine by Atze Dijkstra and Jurriaan Hage");
             })
         });
         egui::TopBottomPanel::bottom("trap output")
