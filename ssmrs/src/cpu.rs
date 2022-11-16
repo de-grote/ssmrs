@@ -1,6 +1,7 @@
 use std::{
     cmp::{max, min},
     collections::HashMap,
+    fmt::Formatter,
 };
 
 use crate::{
@@ -9,19 +10,31 @@ use crate::{
     Code,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Cpu {
     memory: [i32; 2048],
     registers: RegisterFile,
     verbosity: u8,
+    write: Box<dyn Fn(String)>,
+}
+
+impl std::fmt::Debug for Cpu {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Cpu")
+            .field("memory", &self.memory)
+            .field("registers", &self.registers)
+            .field("verbosity", &self.verbosity)
+            .finish()
+    }
 }
 
 impl Cpu {
-    pub fn new(verbosity: u8) -> Cpu {
+    pub fn new(verbosity: u8, write: Box<dyn Fn(String)>) -> Cpu {
         Cpu {
             memory: [0; 2048],
             registers: RegisterFile::new(),
             verbosity,
+            write,
         }
     }
 
@@ -291,12 +304,12 @@ impl Cpu {
             Instr::TRAP(op) => match op {
                 0 => {
                     let v = self.pop_stack();
-                    println!("{}", v);
+                    (self.write)(format!("{}", v));
                 }
                 1 => {
                     let v = self.pop_stack();
                     if let Some(chr) = char::from_u32(v as u32) {
-                        print!("{}", chr);
+                        (self.write)(format!("{}", chr));
                     }
                 }
                 _ => panic!("Unknown trap: {}", op),

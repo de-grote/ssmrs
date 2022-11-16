@@ -3,7 +3,7 @@ use std::{
     ops::{Index, IndexMut},
 };
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub struct RegisterFile {
     pub pc: i32,
     pub sp: i32,
@@ -17,16 +17,7 @@ pub struct RegisterFile {
 
 impl RegisterFile {
     pub fn new() -> Self {
-        Self {
-            pc: 0,
-            sp: 0,
-            mp: 0,
-            r3: 0,
-            r4: 0,
-            r5: 0,
-            r6: 0,
-            r7: 0,
-        }
+        Self::default()
     }
 }
 

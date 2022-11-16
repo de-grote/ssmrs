@@ -2,6 +2,7 @@
 
 members = [
     "ssmrs",
+    "ssmrs-gui",
 ]
 
 default-members = [
