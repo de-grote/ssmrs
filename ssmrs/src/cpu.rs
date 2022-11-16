@@ -218,32 +218,32 @@ impl Cpu {
             Instr::EQ => {
                 let a = self.pop_stack();
                 let b = self.pop_stack();
-                self.push_stack((a == b) as i32);
+                self.push_stack((a == b).get_ssm_value());
             }
             Instr::NE => {
                 let a = self.pop_stack();
                 let b = self.pop_stack();
-                self.push_stack((a != b) as i32);
+                self.push_stack((a != b).get_ssm_value());
             }
             Instr::LT => {
                 let b = self.pop_stack();
                 let a = self.pop_stack();
-                self.push_stack((a < b) as i32);
+                self.push_stack((a < b).get_ssm_value());
             }
             Instr::LE => {
                 let b = self.pop_stack();
                 let a = self.pop_stack();
-                self.push_stack((a <= b) as i32);
+                self.push_stack((a <= b).get_ssm_value());
             }
             Instr::GT => {
                 let b = self.pop_stack();
                 let a = self.pop_stack();
-                self.push_stack((a > b) as i32);
+                self.push_stack((a > b).get_ssm_value());
             }
             Instr::GE => {
                 let b = self.pop_stack();
                 let a = self.pop_stack();
-                self.push_stack((a >= b) as i32);
+                self.push_stack((a >= b).get_ssm_value());
             }
             Instr::NEG => {
                 let a = self.pop_stack();
@@ -251,7 +251,7 @@ impl Cpu {
             }
             Instr::NOT => {
                 let a = self.pop_stack();
-                self.push_stack((a == 0) as i32);
+                self.push_stack((a == 0).get_ssm_value());
             }
             Instr::RET => {
                 let addr = self.pop_stack();
@@ -319,21 +319,35 @@ impl Cpu {
             Instr::AND => {
                 let a = self.pop_stack();
                 let b = self.pop_stack();
-                self.push_stack((a != 0 && b != 0) as i32);
+                self.push_stack((a != 0 && b != 0).get_ssm_value());
             }
             Instr::OR => {
                 let a = self.pop_stack();
                 let b = self.pop_stack();
-                self.push_stack((a != 0 || b != 0) as i32);
+                self.push_stack((a != 0 || b != 0).get_ssm_value());
             }
             Instr::XOR => {
                 let a = self.pop_stack();
                 let b = self.pop_stack();
-                self.push_stack(((a != 0) ^ (b != 0)) as i32);
+                self.push_stack(((a != 0) ^ (b != 0)).get_ssm_value());
             }
             _ => panic!("Invalid instruction!"),
         }
         true
+    }
+}
+
+trait GetSSMValue {
+    fn get_ssm_value(&self) -> i32;
+}
+
+impl GetSSMValue for bool {
+    fn get_ssm_value(&self) -> i32 {
+        if *self {
+            -1
+        } else {
+            0
+        }
     }
 }
 
