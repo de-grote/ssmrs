@@ -1,12 +1,12 @@
 use chumsky::{
     prelude::Simple,
-    primitive::{choice, just},
+    primitive::{choice, filter, just},
     text::{self, ident, whitespace, TextParser},
     Error, Parser,
 };
 
-use crate::register::Reg;
 use crate::Instr;
+use crate::{instruction::Color, register::Reg};
 
 pub fn parse() -> impl Parser<char, Vec<Instr>, Error = Simple<char>> {
     parse_instr().padded().repeated()
@@ -76,8 +76,17 @@ fn parse_instr() -> impl Parser<char, Instr, Error = Simple<char>> {
         i("BRF", Instr::BRF, number),
         i("BRT", Instr::BRT, number),
         i("BSR", Instr::BSR, number),
+        a(number),
     )))
     .or(text::ident().then_ignore(just(":")).map(Instr::LABEL))
+}
+
+fn instr(s: &'static str) -> impl Parser<char, (), Error = Simple<char>> {
+    ident().try_map(move |st: String, span| {
+        st.eq_ignore_ascii_case(s)
+            .then_some(())
+            .ok_or_else(|| Simple::expected_input_found(span, None, None))
+    })
 }
 
 fn i<A>(
@@ -85,19 +94,11 @@ fn i<A>(
     f: impl Fn(A) -> Instr,
     p: impl Parser<char, A, Error = Simple<char>>,
 ) -> impl Parser<char, Instr, Error = Simple<char>> {
-    ident()
-        .try_map(move |st: String, span| {
-            st.eq_ignore_ascii_case(s)
-                .then_some(())
-                .ok_or_else(|| Simple::expected_input_found(span, None, None))
-        })
-        .ignore_then(whitespace())
-        .ignore_then(p)
-        .map(f)
+    instr(s).ignore_then(whitespace()).ignore_then(p).map(f)
 }
 
-fn s(s: &'static str, i: Instr) -> impl Parser<char, Instr, Error = Simple<char>> {
-    just(s).to(i)
+fn s<T: Clone>(s: &'static str, i: T) -> impl Parser<char, T, Error = Simple<char>> {
+    instr(s).to(i)
 }
 
 fn w<A, B>(
@@ -106,12 +107,37 @@ fn w<A, B>(
     p: impl Parser<char, A, Error = Simple<char>>,
     q: impl Parser<char, B, Error = Simple<char>>,
 ) -> impl Parser<char, Instr, Error = Simple<char>> {
-    just(s)
+    instr(s)
         .ignore_then(whitespace())
         .ignore_then(p)
         .then_ignore(whitespace())
         .then(q)
         .map(move |(a, b)| f(a, b))
+}
+
+fn a(
+    number: impl Parser<char, i32, Error = Simple<char>> + Clone,
+) -> impl Parser<char, Instr, Error = Simple<char>> {
+    instr("annote")
+        .ignore_then(whitespace())
+        .ignore_then(parse_register())
+        .then_ignore(whitespace())
+        .then(number.clone())
+        .then_ignore(whitespace())
+        .then(number)
+        .then_ignore(whitespace())
+        .then(parse_color())
+        .then_ignore(whitespace())
+        .then(maybe_quoted_text())
+        .map(|((((a, b), c), d), e)| Instr::ANNOTE(a, b, c, d, e))
+}
+
+fn maybe_quoted_text() -> impl Parser<char, String, Error = Simple<char>> {
+    filter(|c| (c != &'"' && c != &'\n' && c != &'\r'))
+        .repeated()
+        .delimited_by(just("\""), just("\""))
+        .or(filter(|c| (c != &'"' && c != &'\n' && c != &'\r' && c != &' ')).repeated())
+        .map(|v| v.into_iter().collect())
 }
 
 fn parse_register() -> impl Parser<char, Reg, Error = Simple<char>> {
@@ -127,6 +153,23 @@ fn parse_register() -> impl Parser<char, Reg, Error = Simple<char>> {
         just("R0").to(Reg::PC),
         just("R1").to(Reg::SP),
         just("R2").to(Reg::MP),
+    ))
+}
+
+fn parse_color() -> impl Parser<char, Color, Error = Simple<char>> {
+    choice((
+        s("black", Color::Black),
+        s("blue", Color::Blue),
+        s("cyan", Color::Cyan),
+        s("darkGray", Color::DarkGray),
+        s("gray", Color::Gray),
+        s("green", Color::Green),
+        s("lightGray", Color::LightGray),
+        s("magenta", Color::Magenta),
+        s("orange", Color::Orange),
+        s("pink", Color::Pink),
+        s("red", Color::Red),
+        s("yellow", Color::Yellow),
     ))
 }
 
@@ -162,6 +205,54 @@ main:
                 super::Instr::TRAP(0),
                 super::Instr::HALT,
             ])
+        );
+    }
+
+    #[test]
+    fn annote_test() {
+        let code = r#"
+        ANNOTE R0 1 2 black "test2"
+        "#;
+        let result = super::parse().parse(code);
+        assert_eq!(
+            result,
+            Ok(vec![super::Instr::ANNOTE(
+                super::Reg::PC,
+                1,
+                2,
+                super::Color::Black,
+                "test2".to_string()
+            ),])
+        );
+
+        let code = r#"
+        ANNOTE R0 1 2 black "test2 abc"
+        "#;
+        let result = super::parse().parse(code);
+        assert_eq!(
+            result,
+            Ok(vec![super::Instr::ANNOTE(
+                super::Reg::PC,
+                1,
+                2,
+                super::Color::Black,
+                "test2 abc".to_string()
+            ),])
+        );
+
+        let code = r#"
+        ANNOTE R0 1 2 black test2
+        "#;
+        let result = super::parse().parse(code);
+        assert_eq!(
+            result,
+            Ok(vec![super::Instr::ANNOTE(
+                super::Reg::PC,
+                1,
+                2,
+                super::Color::Black,
+                "test2".to_string()
+            ),])
         );
     }
 }

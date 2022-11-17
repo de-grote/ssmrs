@@ -10,13 +10,26 @@ pub struct SSMRS {
     max_sp: usize,
     initial_sp: usize,
     message_queue: Arc<RwLock<Vec<String>>>,
+    verbosity: u8,
+    annotations: HashMap<usize, Annote>,
+    content: HashMap<usize, (Color32, String)>,
+}
+
+struct Annote {
+    text: String,
+    color: Color,
+    reg: Reg,
+    start: i32,
+    end: i32,
 }
 
 use std::future::Future;
 
+use eframe::epaint::ahash::{HashMap, HashMapExt};
 use egui::mutex::{Mutex, RwLock};
 use egui::output::OpenUrl;
-use egui::{RichText, Ui};
+use egui::{Color32, RichText, Ui};
+use ssmrs::instruction::Color;
 use ssmrs::register::Reg;
 use ssmrs::{Code, Cpu, Instr, Parser};
 #[cfg(not(target_arch = "wasm32"))]
@@ -40,6 +53,9 @@ impl SSMRS {
             max_sp: 0,
             initial_sp: 0,
             message_queue: Arc::new(RwLock::new(Vec::new())),
+            verbosity: 0,
+            annotations: HashMap::new(),
+            content: HashMap::new(),
         }
     }
 }
@@ -82,7 +98,7 @@ impl eframe::App for SSMRS {
                         self.halted = false;
                         let q = self.message_queue.clone();
                         self.cpu = Some(Cpu::new(
-                            0,
+                            self.verbosity,
                             Box::new(move |s| {
                                 let mut q = q.write();
                                 q.push(s);
@@ -106,6 +122,16 @@ impl eframe::App for SSMRS {
                     if !res {
                         self.running = false;
                         self.halted = true;
+                    } else {
+                        let pc = cpu.read_registers().pc as usize;
+                        if let Some(annote) = self.annotations.get(&pc) {
+                            let start = (annote.start + cpu.read_registers()[annote.reg]) as usize;
+                            let end = (annote.end + cpu.read_registers()[annote.reg]) as usize;
+                            for i in start..=end {
+                                self.content
+                                    .insert(i, (convert_color(&annote.color), annote.text.clone()));
+                            }
+                        }
                     }
                     ctx.request_repaint();
                 }
@@ -124,6 +150,14 @@ impl eframe::App for SSMRS {
                     #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
                     if ui.button("Quit").clicked() {
                         _frame.close();
+                    }
+                });
+                ui.menu_button("Verbosity", |ui| {
+                    if ui.radio_value(&mut self.verbosity, 0, "None").clicked()
+                        || ui.radio_value(&mut self.verbosity, 1, "Low").clicked()
+                        || ui.radio_value(&mut self.verbosity, 2, "High").clicked()
+                    {
+                        ui.close_menu();
                     }
                 });
                 ui.menu_button("Help", |ui| {
@@ -147,6 +181,19 @@ impl eframe::App for SSMRS {
                     if let Some(cpu) = &mut self.cpu {
                         if !cpu.step() {
                             self.halted = true;
+                        } else {
+                            let pc = cpu.read_registers().pc as usize;
+                            if let Some(annote) = self.annotations.get(&pc) {
+                                let start =
+                                    (annote.start + cpu.read_registers()[annote.reg]) as usize;
+                                let end = (annote.end + cpu.read_registers()[annote.reg]) as usize;
+                                for i in start..=end {
+                                    self.content.insert(
+                                        i,
+                                        (convert_color(&annote.color), annote.text.clone()),
+                                    );
+                                }
+                            }
                         }
                     }
                 }
@@ -237,6 +284,19 @@ impl eframe::App for SSMRS {
                             next_label = Some(text.clone());
                             continue;
                         }
+                        if let Instr::ANNOTE(reg, start, end, color, text) = instr.clone() {
+                            self.annotations.insert(
+                                count,
+                                Annote {
+                                    reg,
+                                    start,
+                                    end,
+                                    color,
+                                    text,
+                                },
+                            );
+                            continue;
+                        }
                         // label
                         if let Some(label) = next_label {
                             ui.label(label);
@@ -280,6 +340,7 @@ impl eframe::App for SSMRS {
                     ui.label(RichText::new("Address").strong());
                     ui.label(RichText::new("Value").strong());
                     ui.label(RichText::new("RegPtrs").strong());
+                    ui.label(RichText::new("Annotation").strong());
                     ui.end_row();
 
                     if let Some(cpu) = self.cpu.as_ref() {
@@ -289,15 +350,22 @@ impl eframe::App for SSMRS {
                         for i in start..=end {
                             ui.label(format!("{:08x}", i));
                             ui.label(format!("{:08x}", cpu.read_memory()[i]));
+                            let mut regs = vec![];
                             for r in 0..8 {
                                 let reg = cpu.read_registers()[r];
                                 if reg == i as i32 {
                                     let r2 = Reg::try_from(r);
                                     match r2 {
-                                        Ok(r2) => ui.label(r2.to_string()),
-                                        Err(_) => ui.label(""),
+                                        Ok(r2) => regs.push(r2.to_string()),
+                                        Err(_) => {}
                                     };
                                 }
+                            }
+                            ui.label(regs.join(", "));
+                            if let Some((color, text)) = self.content.get(&i) {
+                                ui.label(RichText::new(text).color(*color));
+                            } else {
+                                ui.label("");
                             }
                             ui.end_row();
                         }
@@ -305,5 +373,23 @@ impl eframe::App for SSMRS {
                 })
             });
         });
+    }
+}
+
+fn convert_color(color: &Color) -> Color32 {
+    use Color::*;
+    match color {
+        Black => Color32::BLACK,
+        Blue => Color32::BLUE,
+        Cyan => Color32::from_rgb(0, 255, 255),
+        DarkGray => Color32::DARK_GRAY,
+        Gray => Color32::GRAY,
+        Green => Color32::GREEN,
+        LightGray => Color32::LIGHT_GRAY,
+        Magenta => Color32::from_rgb(255, 0, 255),
+        Orange => Color32::from_rgb(255, 165, 0),
+        Pink => Color32::from_rgb(255, 192, 203),
+        Red => Color32::RED,
+        Yellow => Color32::YELLOW,
     }
 }

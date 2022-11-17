@@ -1,0 +1,6 @@
+    LDC 1
+    LDC 2
+    LDC 3
+    ANNOTE SP -1 0 red "Hello, World!"
+    
+    HALT
