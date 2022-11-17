@@ -53,6 +53,7 @@ pub enum Instr {
     NOP,
     HALT,
     LABEL(String),
+    ANNOTE(Reg, i32, i32, Color, String),
 }
 
 impl Instr {
@@ -205,6 +206,9 @@ impl Instr {
             Instr::LABEL(_) => {
                 panic!("LABEL should never be executed!")
             }
+            Instr::ANNOTE(_, _, _, _, _) => {
+                panic!("ANNOTE should never be executed!")
+            }
         }
     }
 
@@ -215,6 +219,7 @@ impl Instr {
             Self::Brf(_) => 2,
             Self::Brt(_) => 2,
             Self::Bsr(_) => 2,
+            Self::ANNOTE(_, _, _, _, _) => 0,
             _ => self.convert().len(),
         }
     }
@@ -248,6 +253,14 @@ impl Instr {
             Self::Brf(n) => vec![String::from("Brf"), n.to_string()],
             Self::Brt(n) => vec![String::from("Brt"), n.to_string()],
             Self::Bsr(n) => vec![String::from("Bsr"), n.to_string()],
+            Self::ANNOTE(n, m, o, p, q) => vec![
+                String::from("ANNOTE"),
+                n.to_string(),
+                m.to_string(),
+                o.to_string(),
+                p.to_string(),
+                q.to_string(),
+            ],
             x => vec![x.to_string().trim().to_string()],
         }
     }
@@ -357,6 +370,42 @@ impl Display for Instr {
             Instr::OR => write!(f, "OR"),
             Instr::XOR => write!(f, "XOR"),
             Instr::LABEL(n) => write!(f, "{}:", n),
+            Instr::ANNOTE(a, b, c, d, e) => write!(f, "ANNOTE {} {} {} {} {}", a, b, c, d, e),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Color {
+    Black,
+    Blue,
+    Cyan,
+    DarkGray,
+    Gray,
+    Green,
+    LightGray,
+    Magenta,
+    Orange,
+    Pink,
+    Red,
+    Yellow,
+}
+
+impl Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Color::Black => write!(f, "black"),
+            Color::Blue => write!(f, "blue"),
+            Color::Cyan => write!(f, "cyan"),
+            Color::DarkGray => write!(f, "darkGray"),
+            Color::Gray => write!(f, "gray"),
+            Color::Green => write!(f, "green"),
+            Color::LightGray => write!(f, "lightGray"),
+            Color::Magenta => write!(f, "magenta"),
+            Color::Orange => write!(f, "orange"),
+            Color::Pink => write!(f, "pink"),
+            Color::Red => write!(f, "red"),
+            Color::Yellow => write!(f, "yellow"),
         }
     }
 }

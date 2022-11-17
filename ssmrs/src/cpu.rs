@@ -40,6 +40,7 @@ impl Cpu {
 
     pub fn load_code(&mut self, mut code: Code) {
         fix_jumps(&mut code);
+        remove_annote(&mut code);
         let code = convert_code(&code);
         for (i, v) in code.iter().enumerate() {
             self.memory[i] = *v;
@@ -88,14 +89,14 @@ impl Cpu {
         let current_pc = self.get_reg(Reg::PC);
         let instr = Instr::from(&self.memory[current_pc as usize..current_pc as usize + 3]);
         if self.verbosity > 1 {
-            println!("Registers: {:?}", self.registers);
-            println!(
+            (self.write)(format!("Registers: {:?}", self.registers));
+            (self.write)(format!(
                 "Memory: {:?}",
                 &self.memory[0..(self.get_reg(Reg::SP) as usize + 1)]
-            );
+            ));
         }
         if self.verbosity > 0 {
-            println!("Executing {:?}", instr);
+            (self.write)(format!("Executing {:?}", instr));
         }
         self.set_reg(Reg::PC, current_pc + instr.instr_size() as i32);
         self.exec(instr)
@@ -410,6 +411,10 @@ fn fix_jumps(code: &mut Code) {
         }
     }
     code.retain(|instr| !matches!(instr, Instr::LABEL(_)));
+}
+
+fn remove_annote(code: &mut Code) {
+    code.retain(|instr| !matches!(instr, Instr::ANNOTE(_, _, _, _, _)));
 }
 
 fn convert_code(code: &Code) -> Vec<i32> {
