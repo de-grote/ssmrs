@@ -1,6 +1,6 @@
 [package]
 name = "ssmrs-gui"
-version = "1.1.0"
+version = "1.2.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -12,7 +12,7 @@ rfd = "0.10.0"
 ssmrs = { path = "../ssmrs" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 tracing-subscriber = "0.3.16"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
