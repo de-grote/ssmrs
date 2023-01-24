@@ -1,0 +1,10 @@
+    LDC 0
+start:
+    LDC 1
+    ADD
+    LDS 0
+    LDC 100
+    EQ
+    BRF start
+    TRAP 0
+    HALT

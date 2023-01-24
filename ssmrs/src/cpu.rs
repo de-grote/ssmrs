@@ -39,7 +39,17 @@ impl Cpu {
     }
 
     pub fn load_code(&mut self, mut code: Code) {
+        let mut c = 0;
+        for i in &code {
+            println!("{}: {:?}", c, i);
+            c += i.instr_size();
+        }
         fix_jumps(&mut code);
+        let mut c = 0;
+        for i in &code {
+            println!("{}: {:?}", c, i);
+            c += i.instr_size();
+        }
         remove_annote(&mut code);
         let code = convert_code(&code);
         for (i, v) in code.iter().enumerate() {
@@ -367,7 +377,7 @@ fn fix_jumps(code: &mut Code) {
                 let target = *labels.get(n).unwrap();
                 let start = min(target, current_idx);
                 let end = max(target, current_idx);
-                let size = sizes[start..=end].iter().sum::<usize>() as i32;
+                let size = sizes[start..end].iter().sum::<usize>() as i32;
                 if target < current_idx {
                     *instr = Instr::BRA(-size);
                 } else {
@@ -378,7 +388,7 @@ fn fix_jumps(code: &mut Code) {
                 let target = *labels.get(n).unwrap();
                 let start = min(target, current_idx);
                 let end = max(target, current_idx);
-                let size = sizes[start..=end].iter().sum::<usize>() as i32;
+                let size = sizes[start..end].iter().sum::<usize>() as i32;
                 if target < current_idx {
                     *instr = Instr::BRT(-size);
                 } else {
@@ -389,7 +399,7 @@ fn fix_jumps(code: &mut Code) {
                 let target = *labels.get(n).unwrap();
                 let start = min(target, current_idx);
                 let end = max(target, current_idx);
-                let size = sizes[start..=end].iter().sum::<usize>() as i32;
+                let size = sizes[start..end].iter().sum::<usize>() as i32;
                 if target < current_idx {
                     *instr = Instr::BRF(-size);
                 } else {
@@ -400,7 +410,7 @@ fn fix_jumps(code: &mut Code) {
                 let target = *labels.get(n).unwrap();
                 let start = min(target, current_idx);
                 let end = max(target, current_idx);
-                let size = sizes[start..=end].iter().sum::<usize>() as i32;
+                let size = sizes[start..end].iter().sum::<usize>() as i32;
                 if target < current_idx {
                     *instr = Instr::BSR(-size);
                 } else {
