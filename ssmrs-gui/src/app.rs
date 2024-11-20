@@ -78,10 +78,12 @@ fn open_file(z: Arc<Mutex<Option<String>>>) {
 }
 
 fn open_url(ui: &Ui, url: &str, new_tab: bool) {
-    ui.ctx().output().open_url = Some(OpenUrl {
-        url: url.to_string(),
-        new_tab,
-    });
+    ui.ctx().output_mut(|o| {
+        o.open_url = Some(OpenUrl {
+            url: url.to_string(),
+            new_tab,
+        });
+    })
 }
 
 impl eframe::App for SSMRS {
@@ -149,7 +151,7 @@ impl eframe::App for SSMRS {
 
                     #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
                     if ui.button("Quit").clicked() {
-                        _frame.close();
+                        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                     }
                 });
                 ui.menu_button("Verbosity", |ui| {
@@ -355,9 +357,8 @@ impl eframe::App for SSMRS {
                                 let reg = cpu.read_registers()[r];
                                 if reg == i as i32 {
                                     let r2 = Reg::try_from(r);
-                                    match r2 {
-                                        Ok(r2) => regs.push(r2.to_string()),
-                                        Err(_) => {}
+                                    if let Ok(r2) = r2 {
+                                        regs.push(r2.to_string())
                                     };
                                 }
                             }

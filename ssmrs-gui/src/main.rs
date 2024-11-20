@@ -12,24 +12,45 @@ async fn main() {
     eframe::run_native(
         "SSMRS",
         native_options,
-        Box::new(|cc| Box::new(ssmrs_gui::SSMRS::new(cc))),
-    );
+        Box::new(|cc| Ok(Box::new(ssmrs_gui::SSMRS::new(cc)))),
+    )
+    .unwrap();
 }
 
 // when compiling to web using trunk.
 #[cfg(target_arch = "wasm32")]
-fn main() {
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen::prelude::wasm_bindgen(start))]
+async fn start() {
     // Make sure panics are logged using `console.error`.
+
+    use eframe::wasm_bindgen::JsCast;
+    use web_sys::HtmlCanvasElement;
     console_error_panic_hook::set_once();
 
     // Redirect tracing to console.log and friends:
     tracing_wasm::set_as_global_default();
 
-    let web_options = eframe::WebOptions::default();
-    eframe::start_web(
-        "the_canvas_id", // hardcode it
-        web_options,
-        Box::new(|cc| Box::new(ssmrs_gui::SSMRS::new(cc))),
-    )
-    .expect("failed to start eframe");
+    let runner = eframe::WebRunner::new();
+    let elem = web_sys::window()
+        .unwrap()
+        .document()
+        .unwrap()
+        .get_element_by_id("the_canvas_id")
+        .unwrap()
+        .dyn_into::<HtmlCanvasElement>()
+        .unwrap();
+
+    runner
+        .start(
+            elem,
+            eframe::WebOptions::default(),
+            Box::new(|cc| Ok(Box::new(ssmrs_gui::SSMRS::new(cc)))),
+        )
+        .await
+        .unwrap();
+}
+
+#[cfg(target_arch = "wasm32")]
+fn main() {
+    // unused
 }
