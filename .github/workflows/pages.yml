@@ -10,15 +10,9 @@ jobs:
   build-pages:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1 
-        with:
-          profile: minimal
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          override: true
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@v4
+      - name: Install wasm32-unknown-unknown target
+        run: rustup target add wasm32-unknown-unknown
       - name: Download and install Trunk binary
         run: wget -qO- https://github.com/thedodd/trunk/releases/latest/download/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
         working-directory: ./ssmrs-gui
@@ -26,7 +20,7 @@ jobs:
         run: ./trunk build --release 
         working-directory: ./ssmrs-gui
       - name: Package
-        uses: actions/upload-pages-artifact@v1.0.4
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./ssmrs-gui/dist
   deploy:
@@ -48,5 +42,5 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
           

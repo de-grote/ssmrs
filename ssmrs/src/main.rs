@@ -1,4 +1,4 @@
-use std::fs::read_to_string;
+use std::{fs::read_to_string, path::PathBuf};
 
 use chumsky::Parser as _;
 use clap::{ArgAction, Parser};
@@ -12,7 +12,7 @@ use ssmrs::cpu::Cpu;
 )]
 struct Cli {
     #[clap(help = "The file to run")]
-    file: String,
+    file: PathBuf,
 
     #[clap(short, long, action = ArgAction::Count, help = "Increase verbosity")]
     verbosity: u8,
@@ -20,6 +20,7 @@ struct Cli {
 
 fn main() {
     let res = Cli::parse();
+    println!("{:?}", res.file);
     let code = read_to_string(res.file).unwrap();
     let c = ssmrs::parse().parse(code).unwrap();
     let mut cpu = Cpu::new(res.verbosity, Box::new(|s| println!("{}", s)));
