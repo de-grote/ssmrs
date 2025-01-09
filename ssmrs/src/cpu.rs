@@ -91,7 +91,7 @@ impl Cpu {
         } else {
             self.heap
                 .get(addr - MAX_STACK_SIZE)
-                .map(|&x| x)
+                .copied()
                 .unwrap_or_default()
         }
     }
@@ -116,7 +116,7 @@ impl Cpu {
     }
 
     fn copy_mem(&mut self, src: i32, dst: i32, size: i32) {
-        for i in 0..size {
+        for i in (0..size).rev() {
             self.set_mem(dst + i, self.get_mem(src + i));
         }
     }
@@ -389,28 +389,45 @@ impl Cpu {
                 self.push_stack(b);
             }
             Instr::STMA(rel, size) => {
+                let src = self.get_reg(Reg::SP) - size;
+                let dst = self.get_mem_reg(Reg::SP);
+                self.copy_mem(src, dst + rel, size);
+                self.adjust_reg(Reg::SP, -(size + 1));
+            }
+            Instr::STMH(_size) => {
                 todo!()
             }
-            Instr::STMH(size) => {
+            Instr::STML(rel, size) => {
+                self.adjust_reg(Reg::SP, -size);
+                let src= self.get_reg(Reg::SP) + 1;
+                let dst = self.get_reg(Reg::MP);
+                self.copy_mem(src, dst + rel, size);
+            }
+            Instr::STMS(rel, size) => {
+                let dst = self.get_reg(Reg::SP);
+                self.adjust_reg(Reg::SP, -size);
+                self.copy_mem(dst - size + 1, dst + rel, size);
+            }
+            Instr::LDMA(rel, size) => {
+                let dst = self.get_reg(Reg::SP);
+                let src = self.get_mem(dst);
+                self.copy_mem(src + rel, dst, size);
+                self.adjust_reg(Reg::SP, size - 1);
+            }
+            Instr::LDMH(_rel, _size) => {
                 todo!()
             }
-            Instr::STML(n, size) => {
-                todo!()
+            Instr::LDML(rel, size) => {
+                let dst = self.get_reg(Reg::SP) + 1;
+                let src = self.get_reg(Reg::MP) + rel;
+                self.copy_mem(src, dst, size);
+                self.adjust_reg(Reg::SP, size);
             }
-            Instr::STMS(n, size) => {
-                todo!()
-            }
-            Instr::LDMA(n, size) => {
-                todo!()
-            }
-            Instr::LDMH(n, size) => {
-                todo!()
-            }
-            Instr::LDML(n, size) => {
-                todo!()
-            }
-            Instr::LDMS(n, size) => {
-                todo!()
+            Instr::LDMS(rel, size) => {
+                let dst = self.get_reg(Reg::SP);
+                let src = dst + rel;
+                self.copy_mem(src, dst + 1, size);
+                self.adjust_reg(Reg::SP, size);
             }
 
             _ => panic!("Invalid instruction!"),
