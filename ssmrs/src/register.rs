@@ -1,3 +1,4 @@
+use crate::MAX_STACK_SIZE;
 use std::{
     fmt::Display,
     ops::{Index, IndexMut},
@@ -8,7 +9,7 @@ pub struct RegisterFile {
     pub pc: i32,
     pub sp: i32,
     pub mp: i32,
-    pub r3: i32,
+    pub hp: i32,
     pub r4: i32,
     pub r5: i32,
     pub r6: i32,
@@ -17,7 +18,16 @@ pub struct RegisterFile {
 
 impl RegisterFile {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            pc: 0,
+            sp: 0,
+            mp: 0,
+            hp: MAX_STACK_SIZE as i32,
+            r4: 0,
+            r5: 0,
+            r6: 0,
+            r7: 0,
+        }
     }
 }
 
@@ -29,7 +39,7 @@ impl Index<Reg> for RegisterFile {
             Reg::PC => &self.pc,
             Reg::SP => &self.sp,
             Reg::MP => &self.mp,
-            Reg::R3 => &self.r3,
+            Reg::HP => &self.hp,
             Reg::R4 => &self.r4,
             Reg::R5 => &self.r5,
             Reg::R6 => &self.r6,
@@ -44,7 +54,7 @@ impl IndexMut<Reg> for RegisterFile {
             Reg::PC => &mut self.pc,
             Reg::SP => &mut self.sp,
             Reg::MP => &mut self.mp,
-            Reg::R3 => &mut self.r3,
+            Reg::HP => &mut self.hp,
             Reg::R4 => &mut self.r4,
             Reg::R5 => &mut self.r5,
             Reg::R6 => &mut self.r6,
@@ -61,7 +71,7 @@ impl Index<i32> for RegisterFile {
             0 => &self.pc,
             1 => &self.sp,
             2 => &self.mp,
-            3 => &self.r3,
+            3 => &self.hp,
             4 => &self.r4,
             5 => &self.r5,
             6 => &self.r6,
@@ -77,7 +87,7 @@ impl IndexMut<i32> for RegisterFile {
             0 => &mut self.pc,
             1 => &mut self.sp,
             2 => &mut self.mp,
-            3 => &mut self.r3,
+            3 => &mut self.hp,
             4 => &mut self.r4,
             5 => &mut self.r5,
             6 => &mut self.r6,
@@ -92,7 +102,7 @@ pub enum Reg {
     PC,
     SP,
     MP,
-    R3,
+    HP,
     R4,
     R5,
     R6,
@@ -105,7 +115,7 @@ impl Display for Reg {
             Reg::PC => write!(f, "PC"),
             Reg::SP => write!(f, "SP"),
             Reg::MP => write!(f, "MP"),
-            Reg::R3 => write!(f, "R3"),
+            Reg::HP => write!(f, "HP"),
             Reg::R4 => write!(f, "R4"),
             Reg::R5 => write!(f, "R5"),
             Reg::R6 => write!(f, "R6"),
@@ -122,7 +132,7 @@ impl TryFrom<i32> for Reg {
             0 => Ok(Reg::PC),
             1 => Ok(Reg::SP),
             2 => Ok(Reg::MP),
-            3 => Ok(Reg::R3),
+            3 => Ok(Reg::HP),
             4 => Ok(Reg::R4),
             5 => Ok(Reg::R5),
             6 => Ok(Reg::R6),

@@ -7,15 +7,16 @@ use std::{
 use crate::{
     instruction::Instr,
     register::{Reg, RegisterFile},
-    Code,
+    Code, MAX_STACK_SIZE,
 };
 
 // #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Cpu {
-    memory: [i32; 2048],
+    memory: [i32; MAX_STACK_SIZE],
     registers: RegisterFile,
     verbosity: u8,
     write: Box<dyn Fn(String)>,
+    heap: Vec<i32>,
 }
 
 impl std::fmt::Debug for Cpu {
@@ -31,23 +32,28 @@ impl std::fmt::Debug for Cpu {
 impl Cpu {
     pub fn new(verbosity: u8, write: Box<dyn Fn(String)>) -> Cpu {
         Cpu {
-            memory: [0; 2048],
+            memory: [0; MAX_STACK_SIZE],
             registers: RegisterFile::new(),
             verbosity,
             write,
+            heap: Vec::new(),
         }
     }
 
     pub fn load_code(&mut self, mut code: Code) {
         let mut c = 0;
         for i in &code {
-            println!("{}: {:?}", c, i);
+            if self.verbosity > 0 {
+                (self.write)(format!("{}: {:?}", c, i));
+            }
             c += i.instr_size();
         }
         fix_jumps(&mut code);
         let mut c = 0;
         for i in &code {
-            println!("{}: {:?}", c, i);
+            if self.verbosity > 0 {
+                (self.write)(format!("{}: {:?}", c, i));
+            }
             c += i.instr_size();
         }
         remove_annote(&mut code);
@@ -71,12 +77,34 @@ impl Cpu {
         self.registers[reg] += val;
     }
 
+    fn reserve_heap(&mut self, size: usize) {
+        if self.heap.len() < size {
+            self.heap
+                .extend(std::iter::repeat_n(0, size - self.heap.len()));
+        }
+    }
+
     fn get_mem(&self, addr: i32) -> i32 {
-        self.memory[addr as usize]
+        let addr = addr as usize;
+        if addr < MAX_STACK_SIZE {
+            self.memory[addr]
+        } else {
+            self.heap
+                .get(addr - MAX_STACK_SIZE)
+                .map(|&x| x)
+                .unwrap_or_default()
+        }
     }
 
     fn set_mem(&mut self, addr: i32, val: i32) {
-        self.memory[addr as usize] = val;
+        let addr = addr as usize;
+        if addr < MAX_STACK_SIZE {
+            self.memory[addr] = val;
+        } else {
+            let heap_idx = addr - MAX_STACK_SIZE;
+            self.reserve_heap(heap_idx + 1);
+            self.heap[heap_idx] = val;
+        }
     }
 
     fn set_mem_reg(&mut self, reg: Reg, val: i32) {
@@ -85,6 +113,12 @@ impl Cpu {
 
     fn get_mem_reg(&self, reg: Reg) -> i32 {
         self.get_mem(self.get_reg(reg))
+    }
+
+    fn copy_mem(&mut self, src: i32, dst: i32, size: i32) {
+        for i in 0..size {
+            self.set_mem(dst + i, self.get_mem(src + i));
+        }
     }
 
     pub fn read_memory(&self) -> &[i32] {
@@ -342,6 +376,43 @@ impl Cpu {
                 let b = self.pop_stack();
                 self.push_stack(a ^ b);
             }
+            Instr::STH => {
+                let a = self.pop_stack();
+                let b = self.get_reg(Reg::HP);
+                self.set_mem_reg(Reg::HP, a);
+                self.adjust_reg(Reg::HP, 1);
+                self.push_stack(b);
+            }
+            Instr::LDH(rel) => {
+                let a = self.pop_stack();
+                let b = self.get_mem(a + rel);
+                self.push_stack(b);
+            }
+            Instr::STMA(rel, size) => {
+                todo!()
+            }
+            Instr::STMH(size) => {
+                todo!()
+            }
+            Instr::STML(n, size) => {
+                todo!()
+            }
+            Instr::STMS(n, size) => {
+                todo!()
+            }
+            Instr::LDMA(n, size) => {
+                todo!()
+            }
+            Instr::LDMH(n, size) => {
+                todo!()
+            }
+            Instr::LDML(n, size) => {
+                todo!()
+            }
+            Instr::LDMS(n, size) => {
+                todo!()
+            }
+
             _ => panic!("Invalid instruction!"),
         }
         true

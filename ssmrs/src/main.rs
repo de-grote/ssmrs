@@ -20,10 +20,16 @@ struct Cli {
 
 fn main() {
     let res = Cli::parse();
-    println!("{:?}", res.file);
+    println!("{}", res.file.display());
     let code = read_to_string(res.file).unwrap();
     let c = ssmrs::parse().parse(code).unwrap();
     let mut cpu = Cpu::new(res.verbosity, Box::new(|s| println!("{}", s)));
     cpu.load_code(c);
     while cpu.step() {}
+    if res.verbosity >= 1 {
+        println!("machine halted");
+    }
+    if res.verbosity >= 2 {
+        println!("{:?}", cpu.read_registers());
+    }
 }

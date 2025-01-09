@@ -9,7 +9,14 @@ use crate::Instr;
 use crate::{instruction::Color, register::Reg};
 
 pub fn parse() -> impl Parser<char, Vec<Instr>, Error = Simple<char>> {
-    parse_instr().padded().repeated()
+    let comment = just("//")
+        .or(just(";"))
+        .then(text::newline().not().repeated())
+        .padded();
+    parse_instr()
+        .padded_by(comment.repeated())
+        .padded()
+        .repeated()
 }
 
 fn parse_instr() -> impl Parser<char, Instr, Error = Simple<char>> {
@@ -23,11 +30,10 @@ fn parse_instr() -> impl Parser<char, Instr, Error = Simple<char>> {
 
     choice((
         i("STR", Instr::STR, parse_register()),
-        i("STR", Instr::STR, parse_register()),
-        i("STL", Instr::STL, number),
         i("STL", Instr::STL, number),
         i("STS", Instr::STS, number),
         i("STA", Instr::STA, number),
+        i("STMH", Instr::STMH, number),
         i("LDR", Instr::LDR, parse_register()),
         i("LDL", Instr::LDL, number),
         i("LDS", Instr::LDS, number),
@@ -36,6 +42,7 @@ fn parse_instr() -> impl Parser<char, Instr, Error = Simple<char>> {
         i("LDLA", Instr::LDLA, number),
         i("LDSA", Instr::LDSA, number),
         i("LDAA", Instr::LDAA, number),
+        i("LDH", Instr::LDH, number),
         i("BRA", Instr::Bra, text::ident()),
         i("BRF", Instr::Brf, text::ident()),
         i("BRT", Instr::Brt, text::ident()),
@@ -68,10 +75,18 @@ fn parse_instr() -> impl Parser<char, Instr, Error = Simple<char>> {
         s("AND", Instr::AND),
         s("OR", Instr::OR),
         s("XOR", Instr::XOR),
+        s("STH", Instr::STH),
     )))
     .or(choice((
         w("SWPRR", Instr::SWPRR, parse_register(), parse_register()),
         w("LDRR", Instr::LDRR, parse_register(), parse_register()),
+        w("STMA", Instr::STMA, number, number),
+        w("STML", Instr::STML, number, number),
+        w("STMS", Instr::STMS, number, number),
+        w("LDMA", Instr::LDMA, number, number),
+        w("LDMH", Instr::LDMH, number, number),
+        w("LDML", Instr::LDML, number, number),
+        w("LDMS", Instr::LDMS, number, number),
         i("BRA", Instr::BRA, number),
         i("BRF", Instr::BRF, number),
         i("BRT", Instr::BRT, number),
@@ -145,14 +160,16 @@ fn parse_register() -> impl Parser<char, Reg, Error = Simple<char>> {
         just("PC").to(Reg::PC),
         just("SP").to(Reg::SP),
         just("MP").to(Reg::MP),
-        just("R3").to(Reg::R3),
+        just("HP").to(Reg::HP),
+        just("RR").to(Reg::R5),
+        just("R0").to(Reg::PC),
+        just("R1").to(Reg::SP),
+        just("R2").to(Reg::MP),
+        just("R3").to(Reg::HP),
         just("R4").to(Reg::R4),
         just("R5").to(Reg::R5),
         just("R6").to(Reg::R6),
         just("R7").to(Reg::R7),
-        just("R0").to(Reg::PC),
-        just("R1").to(Reg::SP),
-        just("R2").to(Reg::MP),
     ))
 }
 

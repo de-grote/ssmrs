@@ -52,6 +52,16 @@ pub enum Instr {
     TRAP(i32),
     NOP,
     HALT,
+    STH,
+    STMA(i32, i32),
+    STMH(i32),
+    STML(i32, i32),
+    STMS(i32, i32),
+    LDH(i32),
+    LDMA(i32, i32),
+    LDMH(i32, i32),
+    LDML(i32, i32),
+    LDMS(i32, i32),
     LABEL(String),
     ANNOTE(Reg, i32, i32, Color, String),
 }
@@ -203,6 +213,36 @@ impl Instr {
             Instr::XOR => {
                 vec![0x2B]
             }
+            Instr::STH => {
+                vec![0x2C]
+            }
+            Instr::STMH(n) => {
+                vec![0x2D, *n]
+            }
+            Instr::LDH(n) => {
+                vec![0x2E, *n]
+            }
+            Instr::LDMH(n, m) => {
+                vec![0x2F, *n, *m]
+            }
+            Instr::STMA(n, m) => {
+                vec![0x30, *n, *m]
+            }
+            Instr::LDMA(n, m) => {
+                vec![0x31, *n, *m]
+            }
+            Instr::STML(n, m) => {
+                vec![0x32, *n, *m]
+            }
+            Instr::STMS(n, m) => {
+                vec![0x33, *n, *m]
+            }
+            Instr::LDML(n, m) => {
+                vec![0x34, *n, *m]
+            }
+            Instr::LDMS(n, m) => {
+                vec![0x35, *n, *m]
+            }
             Instr::LABEL(_) => {
                 panic!("LABEL should never be executed!")
             }
@@ -230,6 +270,10 @@ impl Instr {
             Self::STL(n) => vec![String::from("STL"), n.to_string()],
             Self::STS(n) => vec![String::from("STS"), n.to_string()],
             Self::STA(n) => vec![String::from("STA"), n.to_string()],
+            Self::STMH(n) => vec![String::from("STMH"), n.to_string()],
+            Self::STMA(n, m) => vec![String::from("STMA"), n.to_string(), m.to_string()],
+            Self::STML(n, m) => vec![String::from("STMA"), n.to_string(), m.to_string()],
+            Self::STMS(n, m) => vec![String::from("STMA"), n.to_string(), m.to_string()],
             Self::LDR(n) => vec![String::from("LDR"), n.to_string()],
             Self::LDL(n) => vec![String::from("LDL"), n.to_string()],
             Self::LDS(n) => vec![String::from("LDS"), n.to_string()],
@@ -238,6 +282,10 @@ impl Instr {
             Self::LDLA(n) => vec![String::from("LDLA"), n.to_string()],
             Self::LDSA(n) => vec![String::from("LDSA"), n.to_string()],
             Self::LDAA(n) => vec![String::from("LDAA"), n.to_string()],
+            Self::LDMH(n, m) => vec![String::from("STMH"), n.to_string(), m.to_string()],
+            Self::LDMA(n, m) => vec![String::from("LDMA"), n.to_string(), m.to_string()],
+            Self::LDML(n, m) => vec![String::from("LDMA"), n.to_string(), m.to_string()],
+            Self::LDMS(n, m) => vec![String::from("LDMA"), n.to_string(), m.to_string()],
             Self::BRA(n) => vec![String::from("BRA"), n.to_string()],
             Self::BRF(n) => vec![String::from("BRF"), n.to_string()],
             Self::BRT(n) => vec![String::from("BRT"), n.to_string()],
@@ -313,7 +361,18 @@ impl From<&[i32]> for Instr {
             0x29 => Instr::AND,
             0x2A => Instr::OR,
             0x2B => Instr::XOR,
-            _ => panic!("Invalid instruction!"),
+            0x2C => Instr::STH,
+            0x2D => Instr::STMH(v[1]),
+            0x2E => Instr::LDH(v[1]),
+            0x2F => Instr::LDMH(v[1], v[2]),
+            0x30 => Instr::STMA(v[1], v[2]),
+            0x31 => Instr::LDMA(v[1], v[2]),
+            0x32 => Instr::STML(v[1], v[2]),
+            0x33 => Instr::STMS(v[1], v[2]),
+            0x34 => Instr::LDML(v[1], v[2]),
+            0x35 => Instr::LDMS(v[1], v[2]),
+
+            code => panic!("Invalid instruction! {}", code),
         }
     }
 }
@@ -369,6 +428,16 @@ impl Display for Instr {
             Instr::AND => write!(f, "AND"),
             Instr::OR => write!(f, "OR"),
             Instr::XOR => write!(f, "XOR"),
+            Instr::STH => write!(f, "STH"),
+            Instr::STMH(n) => write!(f, "STMH {}", n),
+            Instr::LDH(n) => write!(f, "LDH {}", n),
+            Instr::LDMH(n, m) => write!(f, "LDMH {}, {}", n, m),
+            Instr::STMA(n, m) => write!(f, "STMA {}, {}", n, m),
+            Instr::LDMA(n, m) => write!(f, "LDMA {}, {}", n, m),
+            Instr::STML(n, m) => write!(f, "STML {}, {}", n, m),
+            Instr::STMS(n, m) => write!(f, "STMS {}, {}", n, m),
+            Instr::LDML(n, m) => write!(f, "LDML {}, {}", n, m),
+            Instr::LDMS(n, m) => write!(f, "LDMS {}, {}", n, m),
             Instr::LABEL(n) => write!(f, "{}:", n),
             Instr::ANNOTE(a, b, c, d, e) => write!(f, "ANNOTE {} {} {} {} {}", a, b, c, d, e),
         }
